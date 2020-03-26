@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">mx_flashlight</string>
+    <string name="enableCamera">Activar permisos</string>
+    <string name="enableNotification">Activar notificaciones</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="previous">Anterior</string>
+    <string name="play">Reproducir</string>
+    <string name="next">Siguiente</string>
+    <string name="stop">Detener</string>
+</resources>
