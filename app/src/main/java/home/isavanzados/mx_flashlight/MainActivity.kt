@@ -1,6 +1,7 @@
 package home.isavanzados.mx_flashlight
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -20,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import home.isavanzados.mx_flashlight.receivers.AlertReceiver
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
 import java.util.*
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
         window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD)
         window.statusBarColor = ContextCompat.getColor(this,R.color.bg_color)
+        setAlarm()
 
         setContentView(R.layout.activity_main)
         val cameraPermision = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -151,6 +154,19 @@ class MainActivity : AppCompatActivity() {
                 }
         }
     }
+
+    fun setAlarm(){
+        val c : Calendar = Calendar.getInstance()
+        c.set(Calendar.HOUR_OF_DAY, 22)
+        c.set(Calendar.MINUTE, 30)
+        c.set(Calendar.SECOND, 0)
+
+        val alarmManager :AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, AlertReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0)
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.timeInMillis, pendingIntent)
+    }
+
     companion object CONSTANTS{
         var torchStatus = false
     }

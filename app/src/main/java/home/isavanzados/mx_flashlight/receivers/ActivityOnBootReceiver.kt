@@ -7,10 +7,10 @@ import android.util.Log
 import android.widget.Toast
 import home.isavanzados.mx_flashlight.MainActivity
 
-class ActivityOnBootReceiver :BroadcastReceiver() {
+class ActivityOnBootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         Toast.makeText(context, "OnBootReceiver", Toast.LENGTH_LONG).show()
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent!!.action)){
+        if (Intent.ACTION_BOOT_COMPLETED == intent!!.action){
             val i = Intent(context, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             context!!.startActivity(i)
