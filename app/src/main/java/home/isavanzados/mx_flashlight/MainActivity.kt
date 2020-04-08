@@ -1,10 +1,7 @@
 package home.isavanzados.mx_flashlight
 
 import android.Manifest
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
@@ -12,15 +9,20 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Camera
 import android.hardware.camera2.CameraManager
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import es.dmoral.toasty.Toasty
 import home.isavanzados.mx_flashlight.receivers.AlertReceiver
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
@@ -30,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     val CHANNEL_ID = "personal_notifications"
     val NOTIFICATION_ID = 1
     val CAMERA_REQUEST = 101
+    val FILE_CHOOSER_REQUEST = 102
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +82,13 @@ class MainActivity : AppCompatActivity() {
             val notificationManager = NotificationManagerCompat.from(this)
 
             notificationManager.notify(NOTIFICATION_ID, notification)
+        }
+
+        btnFileChooser.setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.setType("image/*")
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            startActivityForResult(Intent.createChooser(intent, "Seleccionar archivo"),FILE_CHOOSER_REQUEST)
         }
     }
 
@@ -156,19 +166,55 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setAlarm(){
+        val powerManager:PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val packageName = packageName
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if(!powerManager.isIgnoringBatteryOptimizations(packageName)){
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.data = Uri.parse("package:${packageName}")
+                startActivity(intent)
+            }else{
+                Toasty.success(this,"Aplication aready on withelist").show()
+            }
+        }else{
+            Toasty.success(this, "Android version doesn't need PowerManae config").show()
+        }
         val c : Calendar = Calendar.getInstance()
-        c.set(Calendar.HOUR_OF_DAY, 22)
-        c.set(Calendar.MINUTE, 30)
+        c.set(Calendar.HOUR_OF_DAY, 13)
+        c.set(Calendar.MINUTE, 0)
         c.set(Calendar.SECOND, 0)
 
         val alarmManager :AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlertReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0)
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.timeInMillis, pendingIntent)
+        //alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.timeInMillis, pendingIntent)
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,c.timeInMillis,60000,pendingIntent)
     }
 
     companion object CONSTANTS{
         var torchStatus = false
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FILE_CHOOSER_REQUEST){
+            if(resultCode == Activity.RESULT_OK){
+                if (data?.clipData != null){
+                    Toasty.info(this, "Multiples archivos seleccionados").show()
+                    val dataSize :Int = data.clipData!!.itemCount - 1
+                    for (i in 0..dataSize){
+                        Log.e("PRINT", data.clipData!!.getItemAt(i).uri.path.toString())
+                    }
+                }else if (data?.data != null){
+                    Log.e("PRINT", data.data!!.path.toString())
+                    Toasty.info(this, "Solo un archivo seleccionado").show()
+                }else{
+                    Toasty.error(this, "Error al seleccionar archivo").show()
+                }
+            }else{
+                Toasty.error(this, "Error al seleccionar archivos").show()
+            }
+        }
     }
 }
 

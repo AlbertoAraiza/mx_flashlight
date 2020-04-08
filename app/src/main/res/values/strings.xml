@@ -8,4 +8,5 @@
     <string name="play">Reproducir</string>
     <string name="next">Siguiente</string>
     <string name="stop">Detener</string>
+    <string name="chooseFiles">Seleccionar archivos</string>
 </resources>
