@@ -86,8 +86,10 @@ class MainActivity : AppCompatActivity() {
 
         btnFileChooser.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.setType("image/*")
+            intent.type = "*/*"
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            val mimeTypes = arrayOf("image/*", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/pdf")
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
             startActivityForResult(Intent.createChooser(intent, "Seleccionar archivo"),FILE_CHOOSER_REQUEST)
         }
     }
