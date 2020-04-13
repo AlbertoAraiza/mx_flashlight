@@ -4,18 +4,30 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-feature android:name="android.hardware.location.gps"/>
+
     <uses-feature android:name="android.hardware.camera" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:allowBackup="false"
+        android:name=".utils.MyApp"
+        android:allowBackup="true"
         android:icon="@drawable/ic_app"
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_app"
         android:supportsRtl="true"
-        android:name=".utils.MyApp"
         android:theme="@style/AppTheme">
+        <service
+            android:name=".MinuteService"
+            android:enabled="true"
+            android:exported="true">
+
+        </service>
+
         <receiver android:name=".FlashlightWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -34,14 +46,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--
         <receiver android:name=".receivers.ActivityOnBootReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".receivers.AlertReceiver"/>
+        -->
+        <receiver android:name=".receivers.AlertReceiver" />
     </application>
 
 </manifest>

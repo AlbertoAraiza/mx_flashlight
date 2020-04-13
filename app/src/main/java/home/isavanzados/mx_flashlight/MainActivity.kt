@@ -22,9 +22,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.obsez.android.lib.filechooser.ChooserDialog
 import es.dmoral.toasty.Toasty
 import home.isavanzados.mx_flashlight.receivers.AlertReceiver
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
 import java.lang.Exception
 import java.util.*
 
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     val CHANNEL_ID = "personal_notifications"
     val NOTIFICATION_ID = 1
     val CAMERA_REQUEST = 101
+    val LOCATION_REQUEST = 103
     val FILE_CHOOSER_REQUEST = 102
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         btnEnable.setOnClickListener {
-            ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST)
+            ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), CAMERA_REQUEST)
         }
 
         ivFlashlight.setOnClickListener{
@@ -85,12 +88,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnFileChooser.setOnClickListener {
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "*/*"
-            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+           // val intent = Intent(Intent.ACTION_GET_CONTENT)
+            //intent.type = "*/*"
+            /*intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             val mimeTypes = arrayOf("image/*", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/pdf")
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-            startActivityForResult(Intent.createChooser(intent, "Seleccionar archivo"),FILE_CHOOSER_REQUEST)
+            startActivityForResult(Intent.createChooser(intent, "Seleccionar archivo"),FILE_CHOOSER_REQUEST)*/
+
+             */
+            val chooserDialog = ChooserDialog(it.context)
+            chooserDialog.withFilter(true, false)
+            chooserDialog.withChosenListener(object :ChooserDialog.Result {
+                override fun onChoosePath(path: String?, pathFile: File?) {
+                    Toasty.success(this@MainActivity, "Folder: $path").show()
+                }
+            })
+            chooserDialog.build().show()
+        }
+
+        btnService.setOnClickListener {
+            val intent = Intent(it.context, MinuteService::class.java)
+            startService(intent)
         }
     }
 
@@ -149,24 +167,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when(requestCode){
-            CAMERA_REQUEST ->
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    btnEnable.setEnabled(false);
-                    btnEnable.setText(R.string.enableCamera)
-                    ivFlashlight.setEnabled(true);
-                }else{
-                    Toast.makeText(this, "Permission Denied for the Camera", Toast.LENGTH_SHORT).show();
-                }
-        }
-    }
-
     fun setAlarm(){
         val powerManager:PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         val packageName = packageName
@@ -179,12 +179,11 @@ class MainActivity : AppCompatActivity() {
                 Toasty.success(this,"Aplication aready on withelist").show()
             }
         }else{
-            Toasty.success(this, "Android version doesn't need PowerManae config").show()
+            Toasty.success(this, "Android version doesn't need PowerManaer config").show()
         }
         val c : Calendar = Calendar.getInstance()
-        c.set(Calendar.HOUR_OF_DAY, 13)
-        c.set(Calendar.MINUTE, 0)
-        c.set(Calendar.SECOND, 0)
+        c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1)
+        Log.e("SERV", "Configurando alarm al minuto ${c.get(Calendar.MINUTE)}")
 
         val alarmManager :AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlertReceiver::class.java)
@@ -216,6 +215,24 @@ class MainActivity : AppCompatActivity() {
             }else{
                 Toasty.error(this, "Error al seleccionar archivos").show()
             }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode){
+            CAMERA_REQUEST ->
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    btnEnable.setEnabled(false);
+                    btnEnable.setText(R.string.enableCamera)
+                    ivFlashlight.setEnabled(true);
+                }else{
+                    Toast.makeText(this, "Permission Denied for the Camera", Toast.LENGTH_SHORT).show();
+                }
         }
     }
 }

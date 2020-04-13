@@ -26,6 +26,10 @@ android {
     packagingOptions {
         exclude 'META-INF/atomicfu.kotlin_module'
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
 }
 
@@ -40,7 +44,10 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     implementation 'com.google.android.material:material:1.1.0'
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.19'
+
 
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.github.GrenderG:Toasty:1.4.2'
@@ -51,4 +58,8 @@ dependencies {
     implementation "androidx.room:room-ktx:$rootProject.roomVersion"
     kapt "androidx.room:room-compiler:$rootProject.roomVersion"
     androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
+
+    //Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.7.2'
+    implementation 'com.squareup.retrofit2:converter-gson:2.7.2'
 }
