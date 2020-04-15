@@ -7,11 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-feature android:name="android.hardware.location.gps"/>
-
-    <uses-feature android:name="android.hardware.camera" />
-
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-feature android:name="android.hardware.location.gps"/>
+    <uses-feature android:name="android.hardware.camera" />
 
     <application
         android:name=".utils.MyApp"
@@ -24,8 +23,8 @@
         <service
             android:name=".MinuteService"
             android:enabled="true"
-            android:exported="true">
-
+            android:exported="false"
+            android:process=":remote">
         </service>
 
         <receiver android:name=".FlashlightWidget">
@@ -54,7 +53,16 @@
             </intent-filter>
         </receiver>
         -->
-        <receiver android:name=".receivers.AlertReceiver" />
+        <receiver android:name=".receivers.AlertReceiver"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>

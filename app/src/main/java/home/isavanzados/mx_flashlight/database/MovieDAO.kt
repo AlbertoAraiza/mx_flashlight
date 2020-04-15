@@ -17,4 +17,10 @@ interface MovieDAO {
 
     @Query("SELECT * FROM Movie")
     fun getMovies(): List<Movie>
+
+    @Insert
+    fun saveRegisterTime(rTime :RegisterTime)
+
+    @Query("SELECT * FROM RegisterTime")
+    fun getRegisteredTime():List<RegisterTime>
 }

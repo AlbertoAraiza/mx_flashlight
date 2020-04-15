@@ -1,15 +1,20 @@
 package home.isavanzados.mx_flashlight
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.*
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.hardware.Camera
 import android.hardware.camera2.CameraManager
+import android.location.LocationManager
+import android.media.AudioAttributes
 import android.net.Uri
+import android.os.AsyncTask
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -18,24 +23,34 @@ import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.obsez.android.lib.filechooser.ChooserDialog
 import es.dmoral.toasty.Toasty
+import home.isavanzados.mx_flashlight.database.MoviesDB
+import home.isavanzados.mx_flashlight.database.RegisterTime
 import home.isavanzados.mx_flashlight.receivers.AlertReceiver
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.lang.Exception
+import java.time.LocalDateTime
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.fixedRateTimer
 
 class MainActivity : AppCompatActivity() {
     val CHANNEL_ID = "personal_notifications"
     val NOTIFICATION_ID = 1
     val CAMERA_REQUEST = 101
-    val LOCATION_REQUEST = 103
     val FILE_CHOOSER_REQUEST = 102
+
+    var notificationManager: NotificationManager? = null
+    var alarmManager :AlarmManager? = null
+    var locationManager: LocationManager? = null
+    var pendingIntent :PendingIntent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +59,12 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
         window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD)
         window.statusBarColor = ContextCompat.getColor(this,R.color.bg_color)
-        setAlarm()
+        alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        val alarmIntent = Intent(this, AlertReceiver::class.java)
+        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent,0)
 
         setContentView(R.layout.activity_main)
         val cameraPermision = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -105,10 +125,24 @@ class MainActivity : AppCompatActivity() {
             })
             chooserDialog.build().show()
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel()
+        }
+        btnAlarm.setOnClickListener {
 
-        btnService.setOnClickListener {
-            val intent = Intent(it.context, MinuteService::class.java)
-            startService(intent)
+
+        }
+
+        btncancel.setOnClickListener {
+            object :AsyncTask<Void, Void, Void?>(){
+                override fun doInBackground(vararg params: Void?): Void? {
+                    val registers = MoviesDB.getDatabase().moviesDao().getRegisteredTime() as ArrayList
+                    registers.forEach {
+                        Log.e("SERV",it.toString())
+                    }
+                    return null
+                }
+            }.execute()
         }
     }
 
@@ -162,12 +196,25 @@ class MainActivity : AppCompatActivity() {
 
             val notificationChannel = NotificationChannel(CHANNEL_ID, c_name, importance)
             notificationChannel.description = c_description
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(notificationChannel)
+            notificationManager!!.createNotificationChannel(notificationChannel)
         }
     }
 
     fun setAlarm(){
+        Log.e("SERV", "Inicializanco alarma")
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            Log.e("SERV", "Verion mayor a M")
+            alarmManager!!.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, 0, pendingIntent)
+
+            //alarmManager!!.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, 0, pendingIntent)
+        }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            Log.e("SERV", "Version mayor a K")
+            alarmManager!!.setExact(AlarmManager.RTC_WAKEUP, 0, pendingIntent)
+        }else{
+            Log.e("SERV", "Version inferior")
+            alarmManager!!.set(AlarmManager.RTC_WAKEUP, 0, pendingIntent)
+        }
+    /*
         val powerManager:PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         val packageName = packageName
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -180,7 +227,7 @@ class MainActivity : AppCompatActivity() {
             }
         }else{
             Toasty.success(this, "Android version doesn't need PowerManaer config").show()
-        }
+
         val c : Calendar = Calendar.getInstance()
         c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1)
         Log.e("SERV", "Configurando alarm al minuto ${c.get(Calendar.MINUTE)}")
@@ -189,7 +236,13 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, AlertReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0)
         //alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.timeInMillis, pendingIntent)
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,c.timeInMillis,60000,pendingIntent)
+        //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,c.timeInMillis,60000,pendingIntent)
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,c.timeInMillis,60000,pendingIntent)*/
+    }
+
+    fun cancelAlarm(){
+        alarmManager!!.cancel(pendingIntent)
+        Toasty.info(this, "Alarma cancelada").show()
     }
 
     companion object CONSTANTS{
@@ -227,13 +280,38 @@ class MainActivity : AppCompatActivity() {
         when(requestCode){
             CAMERA_REQUEST ->
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    btnEnable.setEnabled(false);
+                    btnEnable.setEnabled(false)
                     btnEnable.setText(R.string.enableCamera)
-                    ivFlashlight.setEnabled(true);
+                    ivFlashlight.setEnabled(true)
                 }else{
                     Toast.makeText(this, "Permission Denied for the Camera", Toast.LENGTH_SHORT).show();
                 }
         }
+    }
+
+
+
+    private fun isLocationEnabled(): Boolean {
+        return locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager!!.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER
+        )
+    }
+
+    private fun getLastLocation() :String {
+        var locationString = "desconocida"
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val currentLocation = locationManager!!.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)!!
+            locationString = "${currentLocation.latitude}, ${currentLocation.longitude}"
+            Log.e("SERV", locationString)
+        }
+        return locationString
     }
 }
 

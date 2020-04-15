@@ -74,7 +74,7 @@
         app:layout_constraintTop_toBottomOf="@+id/btnNotification" />
 
     <Button
-        android:id="@+id/btnService"
+        android:id="@+id/btnAlarm"
         style="@style/Widget.MaterialComponents.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -82,7 +82,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:fontFamily="@font/coming_soon"
-        android:text="@string/startService"
+        android:text="Iniciar Servicio"
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -91,6 +91,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnFileChooser"/>
+<Button
+        android:id="@+id/btncancel"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/coming_soon"
+        android:text="Mostrar DB en Log"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:backgroundTint="@drawable/button_bg"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnAlarm"/>
 
     <ImageButton
         android:id="@+id/ibHeart"

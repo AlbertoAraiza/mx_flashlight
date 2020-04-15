@@ -5,7 +5,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import home.isavanzados.mx_flashlight.utils.MyApp
 
-@Database(entities = [MovieOST::class, Movie::class], version = 1, exportSchema = false)
+@Database(entities = [MovieOST::class, Movie::class, RegisterTime::class], version = 1, exportSchema = false)
 public abstract class MoviesDB : RoomDatabase(){
     abstract fun moviesDao(): MovieDAO
     companion object {
