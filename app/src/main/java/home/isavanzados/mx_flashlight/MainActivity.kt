@@ -1,29 +1,23 @@
 package home.isavanzados.mx_flashlight
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.*
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.hardware.Camera
 import android.hardware.camera2.CameraManager
 import android.location.LocationManager
-import android.media.AudioAttributes
-import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -32,21 +26,22 @@ import com.obsez.android.lib.filechooser.ChooserDialog
 import es.dmoral.toasty.Toasty
 import home.isavanzados.mx_flashlight.database.MoviesDB
 import home.isavanzados.mx_flashlight.database.RegisterTime
+import home.isavanzados.mx_flashlight.interfaces.RetrofitInterface
 import home.isavanzados.mx_flashlight.receivers.AlertReceiver
 import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.*
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
-import java.lang.Exception
-import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.fixedRateTimer
 
 class MainActivity : AppCompatActivity() {
+    val tag = "SERV"
     val CHANNEL_ID = "personal_notifications"
     val NOTIFICATION_ID = 1
     val CAMERA_REQUEST = 101
     val FILE_CHOOSER_REQUEST = 102
-
+    val retrofit = Retrofit.Builder().baseUrl("https://jsonplaceholder.typicode.com/").addConverterFactory(GsonConverterFactory.create()).build()
     var notificationManager: NotificationManager? = null
     var alarmManager :AlarmManager? = null
     var locationManager: LocationManager? = null
@@ -62,6 +57,10 @@ class MainActivity : AppCompatActivity() {
         alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        var imei = Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID)
+        imei = "ANDROID_ID: $imei"
+        Toasty.success(this, imei).show()
 
         val alarmIntent = Intent(this, AlertReceiver::class.java)
         pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent,0)
@@ -130,7 +129,6 @@ class MainActivity : AppCompatActivity() {
         }
         btnAlarm.setOnClickListener {
 
-
         }
 
         btncancel.setOnClickListener {
@@ -143,6 +141,11 @@ class MainActivity : AppCompatActivity() {
                     return null
                 }
             }.execute()
+        }
+
+        btnMapa.setOnClickListener {
+            val i = Intent(this, MapsActivity::class.java)
+            startActivity(i)
         }
     }
 
@@ -312,6 +315,46 @@ class MainActivity : AppCompatActivity() {
             Log.e("SERV", locationString)
         }
         return locationString
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(tag, "In the onStart() event")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d(tag, "In the onRestart() event")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(tag, "In the onResume() event")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(tag, "In the onPause() event")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(tag, "In the onStop() event")
+    }
+
+    override fun onDestroy() {
+        val service = retrofit.create(RetrofitInterface::class.java)
+        service.sendData().enqueue(object :Callback<Void>{
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.d(tag, "Post failure")
+            }
+
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                Log.d(tag, "Post succed")
+            }
+        })
+        super.onDestroy()
+        Log.d(tag, "In the onDestroy() event")
     }
 }
 

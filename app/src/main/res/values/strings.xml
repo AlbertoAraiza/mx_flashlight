@@ -11,4 +11,5 @@
     <string name="chooseFiles">Seleccionar archivos</string>
     <string name="startService">Iniciar Servicio</string>
     <string name="startAlarm">Iniciar alarma</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
